@@ -1,0 +1,10 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RD MUSIC</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<header class="top"><a class="brand" href="/">RD <b>MUSIC</b></a><a class="btn" href="/admin">Admin</a></header>
+<div class="wrap"><div class="panel"><h1>RD MUSIC</h1><p class="muted">Music • Videos • Pictures • Games • News</p></div>
+<div class="grid">{% for m in media %}<div class="panel"><h2>{{m.title}}</h2><p class="muted">{{m.kind|upper}}{% if m.creator %} • {{m.creator}}{% endif %}</p>
+{% if m.kind=="song" %}<audio controls style="width:100%" src="{{url_for('uploads',name=m.filename)}}"></audio>
+{% elif m.kind=="video" %}<video controls style="width:100%;border-radius:10px" src="{{url_for('uploads',name=m.filename)}}"></video>
+{% elif m.kind=="picture" %}<img style="width:100%;border-radius:10px" src="{{url_for('uploads',name=m.filename)}}">{% else %}<a class="btn" href="{{url_for('uploads',name=m.filename)}}">Open / Download Game</a>{% endif %}
+{% if m.description %}<p>{{m.description}}</p>{% endif %}</div>{% endfor %}</div>
+<h2>📰 Latest News</h2><div class="grid">{% for n in news %}<article class="panel">{% if n.image %}<img style="width:100%;border-radius:10px" src="{{url_for('uploads',name=n.image)}}">{% endif %}<h2>{{n.title}}</h2><p>{{n.body}}</p></article>{% endfor %}</div>
+</div></body></html>
