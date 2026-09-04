@@ -298,3 +298,15 @@ input[type=range]{accent-color:#a855f7;cursor:pointer}
   }
 }
 
+
+.brand-logo img{
+  width:52px;
+  height:52px;
+  display:block;
+  object-fit:contain;
+}
+
+.brand-logo{
+  background:rgba(255,255,255,.08);
+}
+
