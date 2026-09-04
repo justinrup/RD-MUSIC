@@ -467,65 +467,97 @@ function saveSettings(){
 
 
 function uploadItem(type){
-  const input=document.createElement("input");
-  input.type="file";
+  const input = document.createElement("input");
+  input.type = "file";
 
   if(type === "song"){
-    input.accept="audio/*";
+    input.accept = "audio/*";
   }else if(type === "video"){
-    input.accept="video/*";
+    input.accept = "video/*";
   }else if(type === "picture"){
-    input.accept="image/*";
+    input.accept = "image/*";
   }else{
     return;
   }
 
-  input.onchange=function(){
-    const file=input.files[0];
+  input.onchange = function(){
+    const file = input.files[0];
     if(!file) return;
 
-    const title=prompt(
+    const title = prompt(
       type === "song" ? "Song name:" :
       type === "video" ? "Video title:" :
-      "Picture title:",
-      file.name
+      "Picture title:"
     );
 
     if(!title) return;
 
-    const request=indexedDB.open("RDMusicDB",1);
+    let artist = "";
+    let category = "";
+    let coverFile = null;
 
-    request.onupgradeneeded=function(e){
-      const db=e.target.result;
-      if(!db.objectStoreNames.contains("media")){
-        db.createObjectStore("media",{keyPath:"id",autoIncrement:true});
-      }
-    };
+    if(type === "song"){
+      artist = prompt("Artist name:") || "";
+      category = prompt(
+        "Category:\n1. Pop\n2. Romantic\n3. Sad\n4. Devotional\n5. DJ\n6. Other"
+      ) || "";
 
-    request.onsuccess=function(e){
-      const db=e.target.result;
-      const tx=db.transaction("media","readwrite");
+      const coverInput = document.createElement("input");
+      coverInput.type = "file";
+      coverInput.accept = "image/*";
 
-      tx.objectStore("media").add({
-        type:type,
-        title:title,
-        file:file,
-        addedAt:Date.now()
-      });
-
-      tx.oncomplete=function(){
-        alert("✅ "+type+" uploaded successfully!");
+      coverInput.onchange = function(){
+        coverFile = coverInput.files[0] || null;
+        saveUploadedItem();
       };
-    };
 
-    request.onerror=function(){
-      alert("❌ Upload failed.");
-    };
+      coverInput.click();
+    }else{
+      saveUploadedItem();
+    }
+
+    function saveUploadedItem(){
+      const request = indexedDB.open("RDMusicDB", 1);
+
+      request.onsuccess = function(e){
+        const db = e.target.result;
+
+        const tx = db.transaction(
+          type === "song" ? "songs" : "media",
+          "readwrite"
+        );
+
+        const store = tx.objectStore(
+          type === "song" ? "songs" : "media"
+        );
+
+        if(type === "song"){
+          store.add({
+            name: title,
+            artist: artist,
+            category: category,
+            file: file,
+            cover: coverFile,
+            addedAt: Date.now()
+          });
+        }else{
+          store.add({
+            type: type,
+            title: title,
+            file: file,
+            addedAt: Date.now()
+          });
+        }
+
+        tx.oncomplete = function(){
+          alert("✅ Upload successful");
+        };
+      };
+    }
   };
 
   input.click();
 }
-
 function addGame(){
 
   const name = prompt("Game name:");
