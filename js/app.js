@@ -535,7 +535,29 @@ function resetPassword() {
 ========================= */
 
 function loadAdminSongs() {
-  const request = indexedDB.open("RDMusicDB", 1);
+  const request = indexedDB.open("RDMusicDB", 3);
+
+      request.onupgradeneeded = function(e) {
+        const db = e.target.result;
+
+        if (!db.objectStoreNames.contains("songs")) {
+          db.createObjectStore("songs", {
+            keyPath: "id",
+            autoIncrement: true
+          });
+        }
+
+        if (!db.objectStoreNames.contains("media")) {
+          db.createObjectStore("media", {
+            keyPath: "id",
+            autoIncrement: true
+          });
+        }
+      };
+
+      request.onerror = function() {
+        console.error("RDMusicDB error:", request.error);
+      };
 
   request.onsuccess = function(e) {
     const db = e.target.result;
@@ -615,4 +637,84 @@ function displayAdminSongs() {
 document.addEventListener("DOMContentLoaded", function() {
   loadAdminSongs();
 });
+
+
+/* =========================
+   RD MUSIC - PICTURES
+========================= */
+
+function loadPictures() {
+  const list = document.getElementById("pictureList");
+  if (!list) return;
+
+  const request = indexedDB.open("RDMusicDB", 3);
+
+      request.onupgradeneeded = function(e) {
+        const db = e.target.result;
+
+        if (!db.objectStoreNames.contains("songs")) {
+          db.createObjectStore("songs", {
+            keyPath: "id",
+            autoIncrement: true
+          });
+        }
+
+        if (!db.objectStoreNames.contains("media")) {
+          db.createObjectStore("media", {
+            keyPath: "id",
+            autoIncrement: true
+          });
+        }
+      };
+
+      request.onerror = function() {
+        console.error("RDMusicDB error:", request.error);
+      };
+
+  request.onsuccess = function(e) {
+    const db = e.target.result;
+
+    if (!db.objectStoreNames.contains("media")) {
+      list.innerHTML = "<p>No pictures uploaded yet.</p>";
+      return;
+    }
+
+    const tx = db.transaction("media", "readonly");
+    const store = tx.objectStore("media");
+    const getAll = store.getAll();
+
+    getAll.onsuccess = function() {
+      const pictures = getAll.result.filter(item => item.type === "picture");
+
+      if (!pictures.length) {
+        list.innerHTML = "<p>No pictures uploaded yet.</p>";
+        return;
+      }
+
+      list.innerHTML = "";
+
+      pictures.reverse().forEach(item => {
+        const card = document.createElement("div");
+        card.className = "media-card";
+
+        const img = document.createElement("img");
+        img.alt = item.title || "Picture";
+        img.loading = "lazy";
+
+        if (item.file instanceof Blob) {
+          img.src = URL.createObjectURL(item.file);
+        }
+
+        const title = document.createElement("h3");
+        title.textContent = item.title || "Untitled";
+
+        card.appendChild(img);
+        card.appendChild(title);
+        list.appendChild(card);
+      });
+    };
+  };
+}
+
+document.addEventListener("DOMContentLoaded", loadPictures);
 

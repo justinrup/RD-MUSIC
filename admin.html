@@ -517,7 +517,29 @@ function uploadItem(type){
     }
 
     function saveUploadedItem(){
-      const request = indexedDB.open("RDMusicDB", 1);
+      const request = indexedDB.open("RDMusicDB", 3);
+
+      request.onupgradeneeded = function(e) {
+        const db = e.target.result;
+
+        if (!db.objectStoreNames.contains("songs")) {
+          db.createObjectStore("songs", {
+            keyPath: "id",
+            autoIncrement: true
+          });
+        }
+
+        if (!db.objectStoreNames.contains("media")) {
+          db.createObjectStore("media", {
+            keyPath: "id",
+            autoIncrement: true
+          });
+        }
+      };
+
+      request.onerror = function() {
+        console.error("RDMusicDB error:", request.error);
+      };
 
       request.onsuccess = function(e){
         const db = e.target.result;
@@ -584,6 +606,118 @@ function addGame(){
   alert("✅ Game added");
 }
 
+</script>
+
+
+
+<div class="admin-card" style="margin-top:20px;">
+  <h3>🖼️ Uploaded Pictures</h3>
+  <div id="adminPictureList"></div>
+</div>
+
+<script>
+function loadAdminPictures() {
+  const list = document.getElementById("adminPictureList");
+  if (!list) return;
+
+  const request = indexedDB.open("RDMusicDB", 3);
+
+  request.onsuccess = function(e) {
+    const db = e.target.result;
+
+    if (!db.objectStoreNames.contains("media")) {
+      list.innerHTML = "<p>No pictures uploaded yet.</p>";
+      return;
+    }
+
+    const tx = db.transaction("media", "readonly");
+    const store = tx.objectStore("media");
+    const getAll = store.getAll();
+
+    getAll.onsuccess = function() {
+      const pictures = getAll.result.filter(
+        item => item.type === "picture"
+      );
+
+      if (!pictures.length) {
+        list.innerHTML = "<p>No pictures uploaded yet.</p>";
+        return;
+      }
+
+      list.innerHTML = "";
+
+      pictures.reverse().forEach(function(item) {
+        const card = document.createElement("div");
+
+        card.style.cssText =
+          "display:flex;align-items:center;gap:12px;" +
+          "padding:10px;margin:8px 0;" +
+          "border:1px solid #ddd;border-radius:10px;";
+
+        const img = document.createElement("img");
+        img.style.cssText =
+          "width:70px;height:70px;object-fit:cover;border-radius:8px;";
+
+        if (item.file instanceof Blob) {
+          img.src = URL.createObjectURL(item.file);
+        }
+
+        const title = document.createElement("span");
+        title.textContent = item.title || "Untitled";
+        title.style.flex = "1";
+
+        const button = document.createElement("button");
+        button.textContent = "🗑️ Delete";
+        button.onclick = function() {
+          deletePicture(item.id);
+        };
+
+        card.appendChild(img);
+        card.appendChild(title);
+        card.appendChild(button);
+
+        list.appendChild(card);
+      });
+    };
+  };
+}
+
+document.addEventListener("DOMContentLoaded", loadAdminPictures);
+</script>
+
+<script>
+async function deletePicture(id) {
+  if (!confirm("এই ছবিটি Delete করবেন?")) return;
+
+  const request = indexedDB.open("RDMusicDB", 3);
+
+  request.onsuccess = function(e) {
+    const db = e.target.result;
+
+    if (!db.objectStoreNames.contains("media")) {
+      alert("Picture database পাওয়া যায়নি।");
+      return;
+    }
+
+    const tx = db.transaction("media", "readwrite");
+    const store = tx.objectStore("media");
+
+    store.delete(id);
+
+    tx.oncomplete = function() {
+      alert("✅ Picture deleted");
+      location.reload();
+    };
+
+    tx.onerror = function() {
+      alert("❌ Delete failed");
+    };
+  };
+
+  request.onerror = function() {
+    alert("❌ Database error");
+  };
+}
 </script>
 
 </body>
