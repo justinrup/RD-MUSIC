@@ -1,0 +1,558 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RD Music - Admin</title>
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+.admin-wrap{
+  max-width:1100px;
+  margin:auto;
+  padding:80px 20px;
+}
+
+.admin-title{
+  text-align:center;
+  margin-bottom:35px;
+}
+
+.admin-title h1{
+  font-size:40px;
+  margin-bottom:8px;
+}
+
+.admin-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:20px;
+}
+
+.admin-card{
+  background:#15151d;
+  border:1px solid #30303d;
+  border-radius:18px;
+  padding:25px;
+}
+
+.admin-card .icon{
+  font-size:35px;
+}
+
+.admin-card h3{
+  margin:12px 0 8px;
+}
+
+.admin-card p{
+  opacity:.7;
+  line-height:1.5;
+}
+
+.admin-card button{
+  width:100%;
+  border:0;
+  padding:12px;
+  border-radius:10px;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  background:linear-gradient(135deg,#7c3aed,#db2777);
+}
+
+.admin-search{
+  display:flex;
+  gap:10px;
+  max-width:650px;
+  margin:0 auto 30px;
+}
+
+.admin-search input{
+  flex:1;
+  padding:13px;
+  border-radius:10px;
+  border:1px solid #333;
+  background:#15151d;
+  color:white;
+  outline:none;
+}
+
+.admin-search button{
+  border:0;
+  padding:13px 20px;
+  border-radius:10px;
+  color:white;
+  background:#7c3aed;
+}
+
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.8);
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:9999;
+}
+
+.modal-box{
+  width:100%;
+  max-width:500px;
+  background:#15151d;
+  border-radius:18px;
+  padding:25px;
+  border:1px solid #333;
+}
+
+.modal-box h2{
+  margin-top:0;
+}
+
+.modal-box input,
+.modal-box textarea{
+  width:100%;
+  box-sizing:border-box;
+  margin:7px 0;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #333;
+  background:#0b0b10;
+  color:white;
+}
+
+.modal-box textarea{
+  min-height:130px;
+}
+
+.modal-buttons{
+  display:flex;
+  gap:10px;
+  margin-top:15px;
+}
+
+.modal-buttons button{
+  flex:1;
+  padding:12px;
+  border:0;
+  border-radius:10px;
+  font-weight:bold;
+}
+
+.save{
+  background:#7c3aed;
+  color:white;
+}
+
+.close{
+  background:#33333f;
+  color:white;
+}
+
+.status{
+  text-align:center;
+  margin-top:12px;
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <a href="index.html#home" class="logo">
+    RD<span>MUSIC</span>
+  </a>
+
+  <nav class="nav-menu">
+    <a href="index.html#home">Home</a>
+    <a href="index.html#songs">Songs</a>
+    <a href="index.html#pictures">Pictures</a>
+    <a href="index.html#videos">Videos</a>
+    <a href="index.html#games">Games</a>
+    <a href="index.html#social">Social</a>
+    <a href="index.html#about">About</a>
+  </nav>
+</header>
+
+<main class="admin-wrap">
+
+  <div class="admin-title">
+    <h1>⚙️ RD MUSIC ADMIN</h1>
+    <p>Manage your website</p>
+  </div>
+
+  <div class="admin-search">
+    <input
+      id="adminSearch"
+      type="text"
+      placeholder="Search admin tools..."
+      oninput="searchAdmin()"
+    >
+    <button onclick="searchAdmin()">Search</button>
+  </div>
+
+  <div class="admin-grid">
+
+    <div class="admin-card" data-key="about">
+      <div class="icon">✏️</div>
+      <h3>About</h3>
+      <p>Edit your website About information.</p>
+      <button onclick="openAbout()">Edit About</button>
+    </div>
+
+    <div class="admin-card" data-key="social facebook instagram youtube telegram">
+      <div class="icon">📱</div>
+      <h3>Social Media</h3>
+      <p>Add your Facebook, Instagram, YouTube and Telegram links.</p>
+      <button onclick="openSocial()">Edit Social</button>
+    </div>
+
+    <div class="admin-card" data-key="comments comment">
+      <div class="icon">💬</div>
+      <h3>Comments</h3>
+      <p>Turn visitor comments ON or OFF.</p>
+      <button onclick="openComments()">Comment Settings</button>
+    </div>
+
+    <div class="admin-card" data-key="website settings title name">
+      <div class="icon">⚙️</div>
+      <h3>Website Settings</h3>
+     
+      <p>Change website name and title.</p>
+      <button onclick="openSettings()">Settings</button>
+    </div>
+
+    <div class="admin-card" data-key="song music upload">
+      <div class="icon">🎵</div>
+      <h3>Song Upload</h3>
+      <p>Add songs to your website.</p>
+      <button onclick="uploadItem('song')">Upload Song</button>
+    </div>
+
+    <div class="admin-card" data-key="video upload">
+      <div class="icon">🎬</div>
+      <h3>Video Upload</h3>
+      <p>Add videos to your website.</p>
+      <button onclick="uploadItem('video')">Upload Video</button>
+    </div>
+
+    <div class="admin-card" data-key="picture image photo upload">
+      <div class="icon">🖼️</div>
+      <h3>Picture Upload</h3>
+      <p>Add pictures to your website.</p>
+      <button onclick="uploadItem('picture')">Upload Picture</button>
+    </div>
+
+    <div class="admin-card" data-key="game">
+      <div class="icon">🎮</div>
+      <h3>Add Game</h3>
+      <p>Add a game link to your website.</p>
+      <button onclick="addGame()">Add Game</button>
+    </div>
+
+  </div>
+</main>
+
+
+<div class="modal" id="aboutModal">
+  <div class="modal-box">
+    <h2>✏️ Edit About</h2>
+    <textarea id="aboutText" placeholder="Write about RD Music..."></textarea>
+    <div class="modal-buttons">
+      <button class="save" onclick="saveAbout()">Save</button>
+      <button class="close" onclick="closeModal('aboutModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal" id="socialModal">
+  <div class="modal-box">
+    <h2>📱 Social Media</h2>
+
+    <input id="facebook" placeholder="Facebook link">
+    <input id="instagram" placeholder="Instagram link">
+    <input id="youtube" placeholder="YouTube link">
+    <input id="telegram" placeholder="Telegram link">
+
+    <div class="modal-buttons">
+      <button class="save" onclick="saveSocial()">Save</button>
+      <button class="close" onclick="closeModal('socialModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal" id="commentsModal">
+  <div class="modal-box">
+    <h2>💬 Comment Settings</h2>
+
+    <p id="commentStatus">Comments are ON</p>
+
+    <div class="modal-buttons">
+      <button class="save" onclick="commentsOn()">COMMENTS ON</button>
+      <button class="close" onclick="commentsOff()">COMMENTS OFF</button>
+    </div>
+
+    <div class="modal-buttons">
+      <button class="close" onclick="closeModal('commentsModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal" id="settingsModal">
+  <div class="modal-box">
+    <h2>⚙️ Website Settings</h2>
+
+    <input id="siteName" placeholder="Website name">
+    <input id="siteTitle" placeholder="Website title">
+
+    <div class="modal-buttons">
+      <button class="save" onclick="saveSettings()">Save</button>
+      <button class="close" onclick="closeModal('settingsModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+function searchAdmin(){
+
+  const value = document.getElementById("adminSearch")
+    .value.toLowerCase().trim();
+
+  document.querySelectorAll(".admin-card").forEach(function(card){
+
+    const text =
+      card.textContent.toLowerCase() +
+      " " +
+      (card.dataset.key || "").toLowerCase();
+
+    card.style.display =
+      value === "" || text.includes(value) ? "" : "none";
+  });
+}
+
+
+function closeModal(id){
+  document.getElementById(id).style.display = "none";
+}
+
+
+function openAbout(){
+
+  document.getElementById("aboutText").value =
+    localStorage.getItem("rd_about") || "";
+
+  document.getElementById("aboutModal").style.display = "flex";
+}
+
+
+function saveAbout(){
+
+  localStorage.setItem(
+    "rd_about",
+    document.getElementById("aboutText").value
+  );
+
+  alert("✅ About saved");
+  closeModal("aboutModal");
+}
+
+
+function openSocial(){
+
+  document.getElementById("facebook").value =
+    localStorage.getItem("rd_facebook") || "";
+
+  document.getElementById("instagram").value =
+    localStorage.getItem("rd_instagram") || "";
+
+  document.getElementById("youtube").value =
+    localStorage.getItem("rd_youtube") || "";
+
+  document.getElementById("telegram").value =
+    localStorage.getItem("rd_telegram") || "";
+
+  document.getElementById("socialModal").style.display = "flex";
+}
+
+
+function saveSocial(){
+
+  localStorage.setItem(
+    "rd_facebook",
+    document.getElementById("facebook").value
+  );
+
+  localStorage.setItem(
+    "rd_instagram",
+    document.getElementById("instagram").value
+  );
+
+  localStorage.setItem(
+    "rd_youtube",
+    document.getElementById("youtube").value
+  );
+
+  localStorage.setItem(
+    "rd_telegram",
+    document.getElementById("telegram").value
+  );
+
+  alert("✅ Social links saved");
+  closeModal("socialModal");
+}
+
+
+function openComments(){
+
+  const status =
+    localStorage.getItem("rd_comments") === "off"
+      ? "❌ Comments are OFF"
+      : "✅ Comments are ON";
+
+  document.getElementById("commentStatus").textContent = status;
+
+  document.getElementById("commentsModal").style.display = "flex";
+}
+
+
+function commentsOn(){
+
+  localStorage.setItem("rd_comments","on");
+
+  document.getElementById("commentStatus").textContent =
+    "✅ Comments are ON";
+}
+
+
+function commentsOff(){
+
+  localStorage.setItem("rd_comments","off");
+
+  document.getElementById("commentStatus").textContent =
+    "❌ Comments are OFF";
+}
+
+
+function openSettings(){
+
+  document.getElementById("siteName").value =
+    localStorage.getItem("rd_site_name") || "RD Music";
+
+  document.getElementById("siteTitle").value =
+    localStorage.getItem("rd_site_title") || "RD Music";
+
+  document.getElementById("settingsModal").style.display = "flex";
+}
+
+
+function saveSettings(){
+
+  localStorage.setItem(
+    "rd_site_name",
+    document.getElementById("siteName").value
+  );
+
+  localStorage.setItem(
+    "rd_site_title",
+    document.getElementById("siteTitle").value
+  );
+
+  alert("✅ Settings saved");
+  closeModal("settingsModal");
+}
+
+
+function uploadItem(type){
+  const input=document.createElement("input");
+  input.type="file";
+
+  if(type === "song"){
+    input.accept="audio/*";
+  }else if(type === "video"){
+    input.accept="video/*";
+  }else if(type === "picture"){
+    input.accept="image/*";
+  }else{
+    return;
+  }
+
+  input.onchange=function(){
+    const file=input.files[0];
+    if(!file) return;
+
+    const title=prompt(
+      type === "song" ? "Song name:" :
+      type === "video" ? "Video title:" :
+      "Picture title:",
+      file.name
+    );
+
+    if(!title) return;
+
+    const request=indexedDB.open("RDMusicDB",1);
+
+    request.onupgradeneeded=function(e){
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains("media")){
+        db.createObjectStore("media",{keyPath:"id",autoIncrement:true});
+      }
+    };
+
+    request.onsuccess=function(e){
+      const db=e.target.result;
+      const tx=db.transaction("media","readwrite");
+
+      tx.objectStore("media").add({
+        type:type,
+        title:title,
+        file:file,
+        addedAt:Date.now()
+      });
+
+      tx.oncomplete=function(){
+        alert("✅ "+type+" uploaded successfully!");
+      };
+    };
+
+    request.onerror=function(){
+      alert("❌ Upload failed.");
+    };
+  };
+
+  input.click();
+}
+
+function addGame(){
+
+  const name = prompt("Game name:");
+
+  if(!name) return;
+
+  const link = prompt("Game link:");
+
+  if(!link) return;
+
+  const games =
+    JSON.parse(localStorage.getItem("rd_games") || "[]");
+
+  games.push({
+    name: name,
+    link: link
+  });
+
+  localStorage.setItem(
+    "rd_games",
+    JSON.stringify(games)
+  );
+
+  alert("✅ Game added");
+}
+
+</script>
+
+</body>
+</html>
