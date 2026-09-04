@@ -160,3 +160,141 @@ input[type=range]{accent-color:#a855f7;cursor:pointer}
   }
 }
 
+
+.social-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:22px;
+  margin-top:28px;
+}
+
+.social-card{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:22px;
+  min-height:150px;
+  padding:24px 28px;
+  overflow:hidden;
+  border-radius:24px;
+  text-decoration:none;
+  background:#0d0d18;
+  transition:.3s ease;
+}
+
+.social-card:hover{
+  transform:translateY(-5px);
+}
+
+.social-card.facebook{border:1px solid #1877f2;box-shadow:0 0 25px rgba(24,119,242,.20)}
+.social-card.instagram{border:1px solid #e1306c;box-shadow:0 0 25px rgba(225,48,108,.20)}
+.social-card.youtube{border:1px solid #ff0000;box-shadow:0 0 25px rgba(255,0,0,.20)}
+.social-card.telegram{border:1px solid #229ed9;box-shadow:0 0 25px rgba(34,158,217,.20)}
+
+.brand-logo{
+  flex:none;
+  width:78px;
+  height:78px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:22px;
+  color:white;
+  font-weight:900;
+  font-size:50px;
+}
+
+.fb-logo{
+  background:#1877f2;
+  font-family:Arial,sans-serif;
+  box-shadow:0 0 25px rgba(24,119,242,.55);
+}
+
+.insta-logo{
+  background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);
+  font-size:58px;
+  box-shadow:0 0 25px rgba(225,48,108,.55);
+}
+
+.yt-logo{
+  background:#ff0000;
+  font-size:38px;
+  border-radius:20px;
+  box-shadow:0 0 25px rgba(255,0,0,.55);
+}
+
+.tg-logo{
+  background:#229ed9;
+  font-size:42px;
+  transform:none;
+  box-shadow:0 0 25px rgba(34,158,217,.55);
+}
+
+.social-info{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.social-info strong{
+  color:#fff;
+  font-size:25px;
+}
+
+.social-info small{
+  color:#a5a5b5;
+  font-size:15px;
+}
+
+.social-arrow{
+  margin-left:auto;
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:30px;
+  border:1px solid currentColor;
+}
+
+.facebook .social-arrow{color:#1877f2}
+.instagram .social-arrow{color:#e1306c}
+.youtube .social-arrow{color:#ff0000}
+.telegram .social-arrow{color:#229ed9}
+
+@media(max-width:700px){
+  .social-grid{
+    grid-template-columns:1fr;
+    gap:16px;
+  }
+
+  .social-card{
+    min-height:125px;
+    padding:20px;
+    gap:16px;
+  }
+
+  .brand-logo{
+    width:62px;
+    height:62px;
+    border-radius:18px;
+    font-size:40px;
+  }
+
+  .social-info strong{
+    font-size:21px;
+  }
+
+  .social-info small{
+    font-size:13px;
+  }
+
+  .social-arrow{
+    width:40px;
+    height:40px;
+    font-size:25px;
+  }
+}
+
