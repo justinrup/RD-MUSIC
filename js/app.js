@@ -528,3 +528,91 @@ function resetPassword() {
       message.style.color = "#ef4444";
     });
 }
+
+/* =========================
+   LOAD SONGS FROM ADMIN
+   ALBUM COVER + CATEGORY
+========================= */
+
+function loadAdminSongs() {
+  const request = indexedDB.open("RDMusicDB", 1);
+
+  request.onsuccess = function(e) {
+    const db = e.target.result;
+
+    if (!db.objectStoreNames.contains("songs")) {
+      return;
+    }
+
+    const tx = db.transaction("songs", "readonly");
+    const store = tx.objectStore("songs");
+    const getAll = store.getAll();
+
+    getAll.onsuccess = function() {
+      songs = getAll.result || [];
+      displayAdminSongs();
+    };
+  };
+
+  request.onerror = function() {
+    console.log("Could not load songs");
+  };
+}
+
+function displayAdminSongs() {
+  const songList = document.getElementById("songList");
+
+  if (!songList) {
+    return;
+  }
+
+  songList.innerHTML = "";
+
+  if (songs.length === 0) {
+    return;
+  }
+
+  songs.forEach(function(song, index) {
+
+    const card = document.createElement("div");
+    card.className = "song-card";
+
+    let coverURL = "";
+
+    if (song.cover) {
+      coverURL = URL.createObjectURL(song.cover);
+    }
+
+    card.innerHTML = `
+      <div class="song-cover">
+        ${
+          coverURL
+            ? `<img src="${coverURL}" alt="Album Cover">`
+            : `<div class="default-cover">🎵</div>`
+        }
+      </div>
+
+      <div class="song-info">
+        <h3>${song.name || "Unknown Song"}</h3>
+        <p>${song.artist || "Unknown Artist"}</p>
+
+        ${
+          song.category
+            ? `<span class="song-category">${song.category}</span>`
+            : ""
+        }
+      </div>
+
+      <button type="button" onclick="playSong(${index})">
+        ▶ Play
+      </button>
+    `;
+
+    songList.appendChild(card);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  loadAdminSongs();
+});
+
