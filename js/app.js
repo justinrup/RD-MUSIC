@@ -411,3 +411,120 @@ if (audioPlayer) {
 
 }
 
+
+/* =========================
+   FIREBASE PHONE OTP LOGIN
+========================= */
+
+let confirmationResult = null;
+let recaptchaVerifier = null;
+
+function sendOTP() {
+  const phone = document.getElementById("phoneNumber");
+  const message = document.getElementById("loginMessage");
+
+  if (!phone || !message) return;
+
+  const phoneNumber = phone.value.trim();
+
+  if (!/^\+91\d{10}$/.test(phoneNumber)) {
+    message.textContent = "❌ Enter a valid Indian phone number";
+    message.style.color = "#ef4444";
+    return;
+  }
+
+  if (!recaptchaVerifier) {
+    recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+      "recaptcha-container",
+      { size: "normal" }
+    );
+  }
+
+  firebase.auth().signInWithPhoneNumber(phoneNumber, recaptchaVerifier)
+    .then(function(result) {
+      confirmationResult = result;
+
+      document.getElementById("otpCode").style.display = "block";
+      document.getElementById("verifyOTPBtn").style.display = "block";
+
+      message.textContent = "✅ OTP sent";
+      message.style.color = "#22c55e";
+    })
+    .catch(function(error) {
+      message.textContent = "❌ " + error.message;
+      message.style.color = "#ef4444";
+    });
+}
+
+function verifyOTP() {
+  const otp = document.getElementById("otpCode").value.trim();
+  const message = document.getElementById("loginMessage");
+
+  if (!confirmationResult) {
+    message.textContent = "❌ Send OTP first";
+    message.style.color = "#ef4444";
+    return;
+  }
+
+  confirmationResult.confirm(otp)
+    .then(function() {
+      message.textContent = "✓ Login successful";
+      message.style.color = "#22c55e";
+
+      setTimeout(function() {
+        window.location.href = "admin.html";
+      }, 800);
+    })
+    .catch(function() {
+      message.textContent = "❌ Wrong OTP";
+      message.style.color = "#ef4444";
+    });
+}
+
+/* EMAIL LOGIN */
+function emailLogin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const message = document.getElementById("loginMessage");
+
+  if (!email || !password) {
+    message.textContent = "❌ Email and password দিন";
+    message.style.color = "#ef4444";
+    return;
+  }
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(function() {
+      message.textContent = "✓ Login successful";
+      message.style.color = "#22c55e";
+
+      setTimeout(function() {
+        window.location.href = "admin.html";
+      }, 800);
+    })
+    .catch(function(error) {
+      message.textContent = "❌ " + error.message;
+      message.style.color = "#ef4444";
+    });
+}
+
+function resetPassword() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const message = document.getElementById("loginMessage");
+
+  if (!email) {
+    message.textContent = "❌ আগে Email লিখুন";
+    message.style.color = "#ef4444";
+    return;
+  }
+
+  auth.sendPasswordResetEmail(email)
+    .then(function() {
+      message.textContent = "✓ Password reset email পাঠানো হয়েছে";
+      message.style.color = "#22c55e";
+    })
+    .catch(function(error) {
+      message.textContent = "❌ " + error.message;
+      message.style.color = "#ef4444";
+    });
+}
