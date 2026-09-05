@@ -219,21 +219,51 @@ function login() {
 ========================= */
 
 function playSong(index) {
+  const song = songs[index];
 
-  if (!songs[index]) {
+  if (!song) {
+    console.error("Song not found:", index);
     return;
   }
 
-  currentSongIndex = index;
+  console.log("Playing song:", song);
 
-  if (audioPlayer) {
+  let audioURL = song.url;
 
-    audioPlayer.src = songs[index].url;
-
-    audioPlayer.play();
-
+  if (!audioURL && song.file instanceof Blob) {
+    audioURL = URL.createObjectURL(song.file);
+    song.url = audioURL;
   }
 
+  if (!audioURL) {
+    alert("Audio file পাওয়া যায়নি");
+    console.error("No audio file:", song);
+    return;
+  }
+
+  if (!audioPlayer) {
+    audioPlayer = document.getElementById("audioPlayer");
+  }
+
+  if (!audioPlayer) {
+    audioPlayer = document.createElement("audio");
+    audioPlayer.id = "audioPlayer";
+    audioPlayer.controls = true;
+    audioPlayer.style.width = "100%";
+    document.body.appendChild(audioPlayer);
+  }
+
+  audioPlayer.src = audioURL;
+  audioPlayer.load();
+
+  const playPromise = audioPlayer.play();
+
+  if (playPromise !== undefined) {
+    playPromise.catch(function(error) {
+      console.error("Audio play error:", error);
+      alert("Song play হচ্ছে না। Browser console-এ error দেখুন।");
+    });
+  }
 }
 
 
@@ -354,6 +384,196 @@ if (uploadType) {
     }
   );
 
+}
+
+
+/* =========================
+   MEDIA UPLOAD
+========================= */
+
+function selectTheme(theme) {
+
+  const selectedTheme =
+    document.getElementById("selectedTheme");
+
+  if (selectedTheme) {
+    selectedTheme.value = theme;
+  }
+
+  document.querySelectorAll(".theme").forEach(function(btn) {
+    btn.classList.remove("selected");
+  });
+
+  const selectedButton =
+    document.querySelector(".theme." + theme);
+
+  if (selectedButton) {
+    selectedButton.classList.add("selected");
+  }
+}
+
+
+function uploadFile() {
+
+  const type =
+    document.getElementById("uploadType")?.value;
+
+  const fileInput =
+    document.getElementById("fileInput");
+
+  const message =
+    document.getElementById("uploadMessage");
+
+  if (!fileInput || !message) {
+    return;
+  }
+
+  const file = fileInput.files[0];
+
+  if (!file) {
+    message.textContent = "❌ Please choose a file first.";
+    message.style.color = "#ef4444";
+    return;
+  }
+
+  const artist =
+    document.getElementById("artistInput")?.value.trim() || "";
+
+  const coverInput =
+    document.getElementById("coverInput");
+
+  const coverFile =
+    coverInput?.files[0] || null;
+
+  const theme =
+    document.getElementById("selectedTheme")?.value || "purple";
+
+  message.textContent = "⏳ Uploading...";
+  message.style.color = "#ffffff";
+
+  const request =
+    indexedDB.open("RDMusicDB", 3);
+
+  request.onupgradeneeded = function(e) {
+
+    const db = e.target.result;
+
+    if (!db.objectStoreNames.contains("songs")) {
+      db.createObjectStore("songs", {
+        keyPath: "id",
+        autoIncrement: true
+      });
+    }
+
+    if (!db.objectStoreNames.contains("media")) {
+      db.createObjectStore("media", {
+        keyPath: "id",
+        autoIncrement: true
+      });
+    }
+  };
+
+  request.onerror = function() {
+
+    console.error(
+      "Database error:",
+      request.error
+    );
+
+    message.textContent =
+      "❌ Database error: " +
+      (request.error?.message || "Unknown error");
+
+    message.style.color = "#ef4444";
+  };
+
+  request.onsuccess = function(e) {
+
+    const db = e.target.result;
+
+    let storeName =
+      type === "song" ? "songs" : "media";
+
+    const tx =
+      db.transaction(storeName, "readwrite");
+
+    const store =
+      tx.objectStore(storeName);
+
+    let data;
+
+    if (type === "song") {
+
+      data = {
+        name: file.name,
+        artist: artist,
+        category: "Other",
+        theme: theme,
+        file: file,
+        cover: coverFile,
+        addedAt: Date.now()
+      };
+
+    } else {
+
+      data = {
+        type: type,
+        title: file.name,
+        file: file,
+        addedAt: Date.now()
+      };
+    }
+
+    const addRequest =
+      store.add(data);
+
+    addRequest.onerror = function() {
+
+      console.error(
+        "Upload error:",
+        addRequest.error
+      );
+
+      message.textContent =
+        "❌ Upload failed: " +
+        (addRequest.error?.message || "Unknown error");
+
+      message.style.color = "#ef4444";
+    };
+
+    tx.oncomplete = function() {
+
+      message.textContent =
+        "✅ Upload successful!";
+
+      message.style.color = "#22c55e";
+
+      fileInput.value = "";
+
+      if (coverInput) {
+        coverInput.value = "";
+      }
+
+      const artistInput =
+        document.getElementById("artistInput");
+
+      if (artistInput) {
+        artistInput.value = "";
+      }
+
+      setTimeout(function() {
+        closeUpload();
+      }, 1000);
+    };
+
+    tx.onerror = function() {
+
+      message.textContent =
+        "❌ Upload failed.";
+
+      message.style.color = "#ef4444";
+    };
+  };
 }
 
 
@@ -625,9 +845,15 @@ function displayAdminSongs() {
         }
       </div>
 
-      <button type="button" onclick="playSong(${index})">
-        ▶ Play
-      </button>
+      <div class="song-actions">
+        <button type="button" onclick="playSong(${index})">
+          ▶ Play
+        </button>
+
+        <button type="button" onclick="deleteSong(${index})">
+          🗑️ Delete
+        </button>
+      </div>
     `;
 
     songList.appendChild(card);
@@ -718,3 +944,101 @@ function loadPictures() {
 
 document.addEventListener("DOMContentLoaded", loadPictures);
 
+
+
+
+/* =========================
+   THEME
+========================= */
+
+function selectTheme(theme) {
+
+  const selectedTheme =
+    document.getElementById("selectedTheme");
+
+  if (selectedTheme) {
+    selectedTheme.value = theme;
+  }
+
+  document.querySelectorAll(".theme").forEach(function(button) {
+    button.classList.remove("selected");
+  });
+
+  document
+    .querySelectorAll(".theme")
+    .forEach(function(button) {
+
+      if (button.classList.contains(theme)) {
+        button.classList.add("selected");
+      }
+
+    });
+
+}
+
+
+/* =========================
+   UPLOAD FILE
+========================= */
+
+document.addEventListener("DOMContentLoaded", function() {
+
+  selectTheme("purple");
+
+});
+
+
+/* =========================
+   DELETE SONG
+========================= */
+
+function deleteSong(index) {
+  const song = songs[index];
+
+  if (!song) {
+    alert("Song পাওয়া যায়নি");
+    return;
+  }
+
+  const name = song.name || song.title || "এই গান";
+
+  if (!confirm('"' + name + '" Delete করতে চান?')) {
+    return;
+  }
+
+  const request = indexedDB.open("RDMusicDB", 3);
+
+  request.onsuccess = function(e) {
+    const db = e.target.result;
+
+    const tx = db.transaction("songs", "readwrite");
+    const store = tx.objectStore("songs");
+
+    tx.oncomplete = function() {
+      if (song.url && song.url.startsWith("blob:")) {
+        URL.revokeObjectURL(song.url);
+      }
+
+      songs.splice(index, 1);
+      displayAdminSongs();
+
+      alert("Song Delete হয়েছে ✅");
+    };
+
+    tx.onerror = function() {
+      console.error("Delete error:", tx.error);
+      alert("Song Delete করা যায়নি");
+    };
+
+    if (song.id === undefined || song.id === null) {
+      alert("এই গানটির ID পাওয়া যায়নি");
+      return;
+    }
+
+    store.delete(song.id);
+  };
+
+  request.onerror = function() {
+    alert("Database খুলতে সমস্যা হয়েছে");
+  };
+}

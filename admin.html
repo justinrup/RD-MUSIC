@@ -467,6 +467,7 @@ function saveSettings(){
 
 
 function uploadItem(type){
+
   const input = document.createElement("input");
   input.type = "file";
 
@@ -480,7 +481,8 @@ function uploadItem(type){
     return;
   }
 
-  input.onchange = function(){
+  input.onchange = async function(){
+
     const file = input.files[0];
     if(!file) return;
 
@@ -497,89 +499,137 @@ function uploadItem(type){
     let coverFile = null;
 
     if(type === "song"){
+
       artist = prompt("Artist name:") || "";
+
       category = prompt(
         "Category:\n1. Pop\n2. Romantic\n3. Sad\n4. Devotional\n5. DJ\n6. Other"
       ) || "";
 
-      const coverInput = document.createElement("input");
-      coverInput.type = "file";
-      coverInput.accept = "image/*";
+      const wantCover = confirm(
+        "Do you want to add a cover image?"
+      );
 
-      coverInput.onchange = function(){
-        coverFile = coverInput.files[0] || null;
-        saveUploadedItem();
-      };
+      if(wantCover){
 
-      coverInput.click();
-    }else{
-      saveUploadedItem();
+        const coverInput = document.createElement("input");
+        coverInput.type = "file";
+        coverInput.accept = "image/*";
+
+        coverFile = await new Promise(function(resolve){
+
+          coverInput.onchange = function(){
+            resolve(coverInput.files[0] || null);
+          };
+
+          coverInput.click();
+        });
+      }
     }
 
-    function saveUploadedItem(){
-      const request = indexedDB.open("RDMusicDB", 3);
-
-      request.onupgradeneeded = function(e) {
-        const db = e.target.result;
-
-        if (!db.objectStoreNames.contains("songs")) {
-          db.createObjectStore("songs", {
-            keyPath: "id",
-            autoIncrement: true
-          });
-        }
-
-        if (!db.objectStoreNames.contains("media")) {
-          db.createObjectStore("media", {
-            keyPath: "id",
-            autoIncrement: true
-          });
-        }
-      };
-
-      request.onerror = function() {
-        console.error("RDMusicDB error:", request.error);
-      };
-
-      request.onsuccess = function(e){
-        const db = e.target.result;
-
-        const tx = db.transaction(
-          type === "song" ? "songs" : "media",
-          "readwrite"
-        );
-
-        const store = tx.objectStore(
-          type === "song" ? "songs" : "media"
-        );
-
-        if(type === "song"){
-          store.add({
-            name: title,
-            artist: artist,
-            category: category,
-            file: file,
-            cover: coverFile,
-            addedAt: Date.now()
-          });
-        }else{
-          store.add({
-            type: type,
-            title: title,
-            file: file,
-            addedAt: Date.now()
-          });
-        }
-
-        tx.oncomplete = function(){
-          alert("✅ Upload successful");
-        };
-      };
-    }
+    saveUploadedItem();
   };
+
+  function saveUploadedItem(){
+
+    const request = indexedDB.open("RDMusicDB", 3);
+
+    request.onupgradeneeded = function(e){
+
+      const db = e.target.result;
+
+      if(!db.objectStoreNames.contains("songs")){
+        db.createObjectStore("songs", {
+          keyPath: "id",
+          autoIncrement: true
+        });
+      }
+
+      if(!db.objectStoreNames.contains("media")){
+        db.createObjectStore("media", {
+          keyPath: "id",
+          autoIncrement: true
+        });
+      }
+    };
+
+    request.onerror = function(){
+
+      console.error("RDMusicDB error:", request.error);
+
+      alert(
+        "❌ Database error: " +
+        (request.error?.message || "Unknown error")
+      );
+    };
+
+    request.onsuccess = function(e){
+
+      const db = e.target.result;
+
+      const storeName =
+        type === "song" ? "songs" : "media";
+
+      const tx = db.transaction(
+        storeName,
+        "readwrite"
+      );
+
+      const store = tx.objectStore(storeName);
+
+      let data;
+
+      if(type === "song"){
+
+        data = {
+          name: title,
+          artist: artist,
+          category: category,
+          file: file,
+          cover: coverFile,
+          addedAt: Date.now()
+        };
+
+      }else{
+
+        data = {
+          type: type,
+          title: title,
+          file: file,
+          addedAt: Date.now()
+        };
+      }
+
+      const addRequest = store.add(data);
+
+      addRequest.onerror = function(){
+
+        console.error(
+          "Upload error:",
+          addRequest.error
+        );
+
+        alert(
+          "❌ Upload failed: " +
+          (addRequest.error?.message || "Unknown error")
+        );
+      };
+
+      tx.oncomplete = function(){
+
+        alert("✅ Upload successful");
+
+        if(type === "picture" &&
+           typeof loadAdminPictures === "function"){
+          loadAdminPictures();
+        }
+      };
+    };
+  }
 
   input.click();
 }
+
 function addGame(){
 
   const name = prompt("Game name:");
